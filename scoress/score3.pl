@@ -2,7 +2,6 @@
 
 use strict;
 
-
 my $inputfile = $ARGV[0];
 my $usemaxent = 1;
 
