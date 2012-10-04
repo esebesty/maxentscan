@@ -3,58 +3,46 @@
 use strict;
 use warnings;
 
+use Bio::SeqIO;
+use Getopt::Long;
+
+my $inputfile = '';
+
 my @scriptpath = split /\//, $0;
 my $scriptname = pop @scriptpath;
 my $scriptdir  = join '/', @scriptpath;
 
-my $inputfile = $ARGV[0];
-my $usemaxent = 1;
+my $GetOpt = GetOptions( 'fasta=s'  => \$inputfile );
 
 my %me2x5 = &makescorematrix("$scriptdir/me2x5");
 my %seq   = &makesequencematrix("$scriptdir/splicemodels/splice5sequences");
 
-my %bgd   = ();
-$bgd{'A'} = 0.27;
-$bgd{'C'} = 0.23;
-$bgd{'G'} = 0.23;
-$bgd{'T'} = 0.27; 
+my %bgd   = (
+	'A' => 0.27,
+	'C' => 0.23,
+	'G' => 0.23,
+	'T' => 0.27 );
 
-open (FILE,"<$inputfile") || die "can't open!\n";
-SCORE: while(<FILE>) {
-	chomp;
-	if (/^\s*$/) { #discard blank lines;
-		next;
-	} elsif (/^>/) { #discard comment lines;
+my $SequenceObj = Bio::SeqIO->new(
+	'-file'   => "$inputfile",
+	'-format' => 'fasta' );
 
-		#this is totally not a comment line, this is the fasta id
-		#print sequence ID + score, not sequence + score
-		my ($seqid,undef) = split /\s/, $_, 2;
-		$seqid =~ s/^>//;
+SCORE: while (my $SiteObj = $SequenceObj->next_seq()) {
 
-		print "$seqid\t";
+		my $str = $SiteObj->seq();
+		my $id  = $SiteObj->id();
+		$str    = uc($str);
 
-		#next;
-	} else {
-		$_ =~ s/\cM//g; #gets rid of carriage return
-		my $str = $_;
-
-		#check for invalid characters
-		unless ($str =~ /[ACGT].*/i) {
-			print STDERR "Invalid character in $str, skipping!\n";
+		unless ($str =~ /[ACGT]{9}/) {
+			print STDERR "Invalid character in $id $str, skipping!\n";
 			next SCORE;
 		}
 
-		#print $str."\t";
-		$str = uc($str);
-		#print everything in uppercase
-		#print "$str\t";
+		my $score = '0';
+		$score    = &log2(&scoreconsensus($str)*$me2x5{$seq{&getrest($str)}});
 
-		if ($usemaxent) { 
-			print sprintf("%.2f",&log2(&scoreconsensus($str)*$me2x5{$seq{&getrest($str)}}))."\n";
-		}
-	}
+		print "$id\t$score\n";
 }
-close FILE;
 
 sub makesequencematrix {
 
