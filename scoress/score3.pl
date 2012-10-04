@@ -18,7 +18,14 @@ SCORE: while(<FILE>) {
 	if (/^\s*$/) { #discard blank lines;
 		next;
 	} elsif (/^>/) { #discard comment lines;
-		next;
+
+		#print sequence ID + score, not sequence + score
+		my ($seqid,undef) = split /\s/, $_, 2;
+		$seqid =~ s/^>//;
+
+		print "$seqid\t";
+
+		#next;
 	#} elsif (/[NQWERYUIOPLKJHFDSZXVBM]/) {
 	#	next;
 	} else {
@@ -33,7 +40,7 @@ SCORE: while(<FILE>) {
 
 		#print $str."\t";
 		$str = uc($str);
-		print "$str\t";
+		#print "$str\t";
 
 		if ($usemaxent) {
 			print sprintf("%.2f", &log2(&scoreconsensus($str)*&maxentscore(&getrest($str),\@metables)))."\n";

@@ -25,7 +25,15 @@ SCORE: while(<FILE>) {
 	if (/^\s*$/) { #discard blank lines;
 		next;
 	} elsif (/^>/) { #discard comment lines;
-		next;
+
+		#this is totally not a comment line, this is the fasta id
+		#print sequence ID + score, not sequence + score
+		my ($seqid,undef) = split /\s/, $_, 2;
+		$seqid =~ s/^>//;
+
+		print "$seqid\t";
+
+		#next;
 	} else {
 		$_ =~ s/\cM//g; #gets rid of carriage return
 		my $str = $_;
@@ -39,7 +47,7 @@ SCORE: while(<FILE>) {
 		#print $str."\t";
 		$str = uc($str);
 		#print everything in uppercase
-		print "$str\t";
+		#print "$str\t";
 
 		if ($usemaxent) { 
 			print sprintf("%.2f",&log2(&scoreconsensus($str)*$me2x5{$seq{&getrest($str)}}))."\n";
