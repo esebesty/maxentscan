@@ -14,7 +14,7 @@ my $scriptdir  = join '/', @scriptpath;
 
 my $GetOpt = GetOptions( 'fasta=s'  => \$inputfile );
 
-my %me2x5 = &makescorematrix("$scriptdir/me2x5");
+my %me2x5 = &makescorematrix("$scriptdir/splicemodels/me2x5");
 my %seq   = &makesequencematrix("$scriptdir/splicemodels/splice5sequences");
 
 my %bgd   = (
